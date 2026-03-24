@@ -3,148 +3,110 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Drop this on any GameObject in the MainMenu scene.
-/// Builds and styles the entire UI at runtime — no manual Canvas setup needed.
-/// </summary>
 public class MainMenuManager : MonoBehaviour
 {
-    // ── PlayerPrefs keys ───────────────────────────────────────────────────────
     private const string PrefDifficulty = "Difficulty";
     private const string PrefHighScore  = "HighScore";
 
-    private int   selectedDifficulty = 1;
+    private int selectedDifficulty = 1;
     private Image easyImg, mediumImg, hardImg;
 
-    [Header("Background")]
-    [Tooltip("Assign your background sprite here.")]
     public Sprite backgroundSprite;
+    public TMP_FontAsset arcadeFont; 
 
-    [Header("Font")]
-    [Tooltip("Assign your imported Press Start 2P (or any TMP font asset) here.")]
-    public TMP_FontAsset arcadeFont; // leave empty to use TMP default
-
-    // ── Shared rounded sprite (white, recoloured per element) ──────────────────
     private Sprite _roundedSprite;
-    private const int RoundRadius = 10; // pixels in the 128×128 source texture
+    private const int RoundRadius = 10; 
 
-    // ── Palette — Custom Warm/Dark Theme ───────────────────────────────────────
-    private static readonly Color BgColor      = new Color(0.153f, 0.188f, 0.235f); // #27303C
-    private static readonly Color CardColor    = new Color(0.94f, 0.93f, 0.88f, 0.98f); // dull off-white cream
-    private static readonly Color AccentColor  = new Color(0.153f, 0.188f, 0.235f); // #27303C (matches background)
+    private static readonly Color BgColor = new Color(0.153f, 0.188f, 0.235f); 
+    private static readonly Color CardColor = new Color(0.94f, 0.93f, 0.88f, 0.98f); 
+    private static readonly Color AccentColor = new Color(0.153f, 0.188f, 0.235f); 
     
-    // Exact colors restored (no HDR multipliers)
-    private static readonly Color PlayBtnColor = new Color(0.851f, 0.478f, 0.169f); // #D97A2B
-    private static readonly Color ButtonColor  = new Color(0.7f, 0.7f, 0.75f); // warm grey for unselected buttons
-    private static readonly Color EasyColor    = new Color(0.2f, 0.8f, 0.2f); // green
-    private static readonly Color MediumColor  = PlayBtnColor; // orange
-    private static readonly Color HardColor    = new Color(0.9f, 0.15f, 0.15f); // red
-    private static readonly Color TextColor    = Color.black; // black text for buttons
-    private static readonly Color SubTextColor = Color.black; // black text for score/controls
-    private static readonly Color DividerColor = new Color(0f, 0f, 0f, 0.2f); // subtle dark dividers
+    private static readonly Color PlayBtnColor = new Color(0.851f, 0.478f, 0.169f); 
+    private static readonly Color ButtonColor = new Color(0.7f, 0.7f, 0.75f); 
+    private static readonly Color EasyColor = new Color(0.2f, 0.8f, 0.2f);
+    private static readonly Color MediumColor = PlayBtnColor; 
+    private static readonly Color HardColor = new Color(0.9f, 0.15f, 0.15f); 
+    private static readonly Color TextColor = Color.black; 
+    private static readonly Color SubTextColor = Color.black; 
+    private static readonly Color DividerColor = new Color(0f, 0f, 0f, 0.2f); 
 
-    // ─────────────────────────────────────────────────────────────────────────
     void Awake() => BuildUI();
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  UI Builder
-    // ─────────────────────────────────────────────────────────────────────────
 
     private void BuildUI()
     {
-        // Generate the rounded rect sprite once — reused for every button & card
         _roundedSprite = MakeRoundedSprite(128, 128, RoundRadius);
 
-        // Camera background
         Camera.main.backgroundColor = BgColor;
-        Camera.main.clearFlags      = CameraClearFlags.SolidColor;
+        Camera.main.clearFlags = CameraClearFlags.SolidColor;
 
-        // Canvas
+        // setup the canvas for urp post processing
         Canvas canvas = FindFirstObjectByType<Canvas>();
         if (canvas == null)
         {
             GameObject go = new GameObject("Canvas");
             canvas = go.AddComponent<Canvas>();
-            // Change to ScreenSpaceCamera so URP Post-Processing Bloom affects the UI!
+            
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = Camera.main;
             canvas.planeDistance = 5f;
 
-            CanvasScaler cs   = go.AddComponent<CanvasScaler>();
-            cs.uiScaleMode         = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            CanvasScaler cs = go.AddComponent<CanvasScaler>();
+            cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             cs.referenceResolution = new Vector2(1920, 1080);
             go.AddComponent<GraphicRaycaster>();
         }
 
         RectTransform root = canvas.GetComponent<RectTransform>();
 
-        // Full-screen background colour or image
-        Image bgImg = MakeImage(root, "Background", backgroundSprite != null ? Color.white : BgColor, Vector2.zero, Vector2.one,
-                  Vector2.zero, Vector2.zero);
+        // background image setup
+        Image bgImg = MakeImage(root, "Background", backgroundSprite != null ? Color.white : BgColor, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         if (backgroundSprite != null)
         {
             bgImg.sprite = backgroundSprite;
         }
 
-        // ── Dark card panel (gives the content depth) ─────────────────────────
-        RectTransform card = MakePanel(canvas.transform, "Card",
-                                       new Vector2(580f, 740f), CardColor);
+        // draw the center card
+        RectTransform card = MakePanel(canvas.transform, "Card", new Vector2(580f, 740f), CardColor);
 
-        // ── Content container centred inside the card ─────────────────────────
         GameObject container = new GameObject("Container");
         container.transform.SetParent(canvas.transform, false);
         RectTransform ct = container.AddComponent<RectTransform>();
         ct.anchorMin = new Vector2(0.5f, 0.5f);
         ct.anchorMax = new Vector2(0.5f, 0.5f);
-        ct.pivot     = new Vector2(0.5f, 0.5f);
+        ct.pivot = new Vector2(0.5f, 0.5f);
         ct.sizeDelta = new Vector2(500f, 710f);
         ct.anchoredPosition = Vector2.zero;
 
         VerticalLayoutGroup vlg = container.AddComponent<VerticalLayoutGroup>();
-        vlg.childAlignment        = TextAnchor.MiddleCenter;
-        vlg.spacing               = 13f;
-        vlg.padding               = new RectOffset(0, 0, 28, 28);
-        vlg.childControlWidth     = true;
-        vlg.childControlHeight    = false;
+        vlg.childAlignment = TextAnchor.MiddleCenter;
+        vlg.spacing = 13f;
+        vlg.padding = new RectOffset(0, 0, 28, 28);
+        vlg.childControlWidth = true;
+        vlg.childControlHeight = false;
         vlg.childForceExpandWidth = true;
 
-        // ── Title ─────────────────────────────────────────────────────────────
         MakeLabel(ct, "TitleText", "PONG PING", 82, FontStyles.Bold, AccentColor, 108f);
 
-        // ── High score ────────────────────────────────────────────────────────
+        // load and show high score
         int hs = PlayerPrefs.GetInt(PrefHighScore, 0);
         string hsDisplay = hs > 0 ? "[ Best Score: " + hs + " ]" : "[ No score yet ]";
         MakeLabel(ct, "HighScoreText", hsDisplay, 21, FontStyles.Italic, SubTextColor, 34f);
 
-        // ── Divider ───────────────────────────────────────────────────────────
         MakeDivider(ct, DividerColor);
 
-        // ── Difficulty label ──────────────────────────────────────────────────
-        MakeLabel(ct, "DiffLabel", "--- SELECT DIFFICULTY ---", 16,
-                  FontStyles.Bold, SubTextColor, 26f);
+        MakeLabel(ct, "DiffLabel", "--- SELECT DIFFICULTY ---", 16, FontStyles.Bold, SubTextColor, 26f);
 
-        // ── Difficulty row ────────────────────────────────────────────────────
         selectedDifficulty = PlayerPrefs.GetInt(PrefDifficulty, 1);
         MakeDifficultyRow(ct);
 
-        // ── PLAY button ───────────────────────────────────────────────────────
         MakeButton(ct, "PlayButton", "PLAY", PlayBtnColor, TextColor, 82f, OnPlayPressed);
-
-        // ── QUIT button ───────────────────────────────────────────────────────
         MakeButton(ct, "QuitButton", "QUIT", ButtonColor, SubTextColor, 48f, OnQuitPressed);
 
-        // ── Divider ───────────────────────────────────────────────────────────
         MakeDivider(ct, DividerColor);
 
-        // ── Controls ──────────────────────────────────────────────────────────
-        MakeLabel(ct, "ControlsText",
-                  "W / UP   Move Up          S / DOWN   Move Down",
-                  16, FontStyles.Normal, SubTextColor, 28f);
+        // show controls at bottom
+        MakeLabel(ct, "ControlsText", "W / UP : MOVE UP\n\nS / DOWN : MOVE DOWN", 14, FontStyles.Normal, SubTextColor, 50f);
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Difficulty Row
-    // ─────────────────────────────────────────────────────────────────────────
 
     private void MakeDifficultyRow(RectTransform parent)
     {
@@ -154,30 +116,27 @@ public class MainMenuManager : MonoBehaviour
         rt.sizeDelta = new Vector2(0f, 60f);
 
         HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
-        hlg.childAlignment        = TextAnchor.MiddleCenter;
-        hlg.spacing               = 16f;
-        hlg.padding               = new RectOffset(4, 4, 0, 0);
-        hlg.childControlWidth     = true;
-        hlg.childControlHeight    = true;
+        hlg.childAlignment = TextAnchor.MiddleCenter;
+        hlg.spacing = 16f;
+        hlg.padding = new RectOffset(4, 4, 0, 0);
+        hlg.childControlWidth = true;
+        hlg.childControlHeight = true;
         hlg.childForceExpandWidth = true;
 
-        Button easy   = MakeSmallButton(rt, "EasyBtn",   "EASY",   out easyImg);
+        Button easy = MakeSmallButton(rt, "EasyBtn", "EASY", out easyImg);
         Button medium = MakeSmallButton(rt, "MediumBtn", "MEDIUM", out mediumImg);
-        Button hard   = MakeSmallButton(rt, "HardBtn",   "HARD",   out hardImg);
+        Button hard = MakeSmallButton(rt, "HardBtn", "HARD", out hardImg);
 
-        easy.onClick.AddListener(()   => SelectDifficulty(0));
+        easy.onClick.AddListener(() => SelectDifficulty(0));
         medium.onClick.AddListener(() => SelectDifficulty(1));
-        hard.onClick.AddListener(()   => SelectDifficulty(2));
+        hard.onClick.AddListener(() => SelectDifficulty(2));
 
         RefreshDifficultyButtons();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Difficulty Logic
-    // ─────────────────────────────────────────────────────────────────────────
-
     private void SelectDifficulty(int level)
     {
+        // save their choice
         selectedDifficulty = level;
         PlayerPrefs.SetInt(PrefDifficulty, level);
         PlayerPrefs.Save();
@@ -186,16 +145,13 @@ public class MainMenuManager : MonoBehaviour
 
     private void RefreshDifficultyButtons()
     {
-        if (easyImg   != null) easyImg.color   = selectedDifficulty == 0 ? EasyColor   : ButtonColor;
+        // update button highlight colors
+        if (easyImg != null) easyImg.color = selectedDifficulty == 0 ? EasyColor : ButtonColor;
         if (mediumImg != null) mediumImg.color = selectedDifficulty == 1 ? MediumColor : ButtonColor;
-        if (hardImg   != null) hardImg.color   = selectedDifficulty == 2 ? HardColor   : ButtonColor;
+        if (hardImg != null) hardImg.color = selectedDifficulty == 2 ? HardColor : ButtonColor;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Button Callbacks
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private void OnPlayPressed()  => SceneManager.LoadScene(1);
+    private void OnPlayPressed() => SceneManager.LoadScene(1);
 
     private void OnQuitPressed()
     {
@@ -206,11 +162,6 @@ public class MainMenuManager : MonoBehaviour
 #endif
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  UI Helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /// Creates a centred panel with the rounded card sprite.
     private RectTransform MakePanel(Transform parent, string name, Vector2 size, Color color)
     {
         GameObject go = new GameObject(name);
@@ -218,54 +169,51 @@ public class MainMenuManager : MonoBehaviour
         RectTransform rt = go.AddComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.pivot     = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = size;
         rt.anchoredPosition = Vector2.zero;
 
-        Image img  = go.AddComponent<Image>();
+        Image img = go.AddComponent<Image>();
         img.sprite = _roundedSprite;
-        img.type   = Image.Type.Sliced;
-        img.color  = color;
+        img.type = Image.Type.Sliced;
+        img.color = color;
         return rt;
     }
 
-    private TextMeshProUGUI MakeLabel(RectTransform parent, string name, string text,
-                                      float fontSize, FontStyles style, Color color, float height)
+    private TextMeshProUGUI MakeLabel(RectTransform parent, string name, string text, float fontSize, FontStyles style, Color color, float height)
     {
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent, false);
         go.AddComponent<RectTransform>().sizeDelta = new Vector2(0f, height);
 
         TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.text      = text;
-        tmp.fontSize  = fontSize;
+        tmp.text = text;
+        tmp.fontSize = fontSize;
         tmp.fontStyle = style;
-        tmp.color     = color;
+        tmp.color = color;
         tmp.alignment = TextAlignmentOptions.Center;
         if (arcadeFont != null) tmp.font = arcadeFont;
         return tmp;
     }
 
-    private Button MakeButton(RectTransform parent, string name, string label,
-                               Color bgCol, Color textCol, float height,
-                               UnityEngine.Events.UnityAction action)
+    private Button MakeButton(RectTransform parent, string name, string label, Color bgCol, Color textCol, float height, UnityEngine.Events.UnityAction action)
     {
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent, false);
         go.AddComponent<RectTransform>().sizeDelta = new Vector2(0f, height);
 
-        Image img  = go.AddComponent<Image>();
+        Image img = go.AddComponent<Image>();
         img.sprite = _roundedSprite;
-        img.type   = Image.Type.Sliced;
-        img.color  = bgCol;
+        img.type = Image.Type.Sliced;
+        img.color = Color.white; 
 
         Button btn = go.AddComponent<Button>();
         ColorBlock cb = btn.colors;
-        cb.normalColor      = bgCol;
+        cb.normalColor = bgCol;
         cb.highlightedColor = Color.Lerp(bgCol, Color.white, 0.18f);
-        cb.pressedColor     = Color.Lerp(bgCol, Color.black, 0.18f);
-        cb.selectedColor    = bgCol;
-        btn.colors          = cb;
+        cb.pressedColor = Color.Lerp(bgCol, Color.black, 0.18f);
+        cb.selectedColor = bgCol;
+        btn.colors = cb;
         btn.onClick.AddListener(action);
 
         GameObject textGo = new GameObject("Text");
@@ -275,10 +223,10 @@ public class MainMenuManager : MonoBehaviour
         trt.sizeDelta = Vector2.zero;
 
         TextMeshProUGUI tmp = textGo.AddComponent<TextMeshProUGUI>();
-        tmp.text      = label;
-        tmp.fontSize  = height * 0.36f;
+        tmp.text = label;
+        tmp.fontSize = height * 0.36f;
         tmp.fontStyle = FontStyles.Bold;
-        tmp.color     = textCol;
+        tmp.color = textCol;
         tmp.alignment = TextAlignmentOptions.Center;
         if (arcadeFont != null) tmp.font = arcadeFont;
 
@@ -291,18 +239,18 @@ public class MainMenuManager : MonoBehaviour
         go.transform.SetParent(parent, false);
         go.AddComponent<RectTransform>().sizeDelta = new Vector2(0f, 60f);
 
-        imgOut        = go.AddComponent<Image>();
+        imgOut = go.AddComponent<Image>();
         imgOut.sprite = _roundedSprite;
-        imgOut.type   = Image.Type.Sliced;
-        imgOut.color  = ButtonColor;
+        imgOut.type = Image.Type.Sliced;
+        imgOut.color = ButtonColor;
 
         Button btn = go.AddComponent<Button>();
         btn.targetGraphic = imgOut;
 
         ColorBlock cb = btn.colors;
         cb.highlightedColor = Color.Lerp(ButtonColor, Color.white, 0.15f);
-        cb.pressedColor     = Color.Lerp(ButtonColor, Color.black, 0.15f);
-        btn.colors          = cb;
+        cb.pressedColor = Color.Lerp(ButtonColor, Color.black, 0.15f);
+        btn.colors = cb;
 
         GameObject textGo = new GameObject("Text");
         textGo.transform.SetParent(go.transform, false);
@@ -311,19 +259,17 @@ public class MainMenuManager : MonoBehaviour
         trt.sizeDelta = Vector2.zero;
 
         TextMeshProUGUI tmp = textGo.AddComponent<TextMeshProUGUI>();
-        tmp.text      = label;
-        tmp.fontSize  = 20f;
+        tmp.text = label;
+        tmp.fontSize = 20f;
         tmp.fontStyle = FontStyles.Bold;
-        tmp.color     = TextColor;
+        tmp.color = TextColor;
         tmp.alignment = TextAlignmentOptions.Center;
         if (arcadeFont != null) tmp.font = arcadeFont;
 
         return btn;
     }
 
-    private Image MakeImage(RectTransform parent, string name, Color color,
-                             Vector2 anchorMin, Vector2 anchorMax,
-                             Vector2 offsetMin, Vector2 offsetMax)
+    private Image MakeImage(RectTransform parent, string name, Color color, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
     {
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent, false);
@@ -343,19 +289,12 @@ public class MainMenuManager : MonoBehaviour
         go.AddComponent<Image>().color = color;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Rounded Rectangle Sprite Generator
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Generates a white rounded-rect Sprite usable with Image.Type.Sliced.
-    /// Recolour it via Image.color.
-    /// </summary>
+    // draw the curved image behind the buttons
     private Sprite MakeRoundedSprite(int w, int h, int r)
     {
         Texture2D tex = new Texture2D(w, h, TextureFormat.ARGB32, false);
         tex.filterMode = FilterMode.Bilinear;
-        tex.wrapMode   = TextureWrapMode.Clamp;
+        tex.wrapMode = TextureWrapMode.Clamp;
 
         Color[] pixels = new Color[w * h];
         Color white = Color.white;
@@ -368,22 +307,15 @@ public class MainMenuManager : MonoBehaviour
         tex.SetPixels(pixels);
         tex.Apply();
 
-        // Border offsets for 9-slicing — keeps corners intact during resize
-        return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f),
-                             100f, 0, SpriteMeshType.FullRect,
-                             new Vector4(r, r, r, r));
+        return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(r, r, r, r));
     }
 
     private bool InsideRoundedRect(int x, int y, int w, int h, int r)
     {
-        // Bottom-left corner
-        if (x < r     && y < r)     return CircleDist(x, y, r,     r)     <= r;
-        // Bottom-right
-        if (x > w-r-1 && y < r)     return CircleDist(x, y, w-r-1, r)     <= r;
-        // Top-left
-        if (x < r     && y > h-r-1) return CircleDist(x, y, r,     h-r-1) <= r;
-        // Top-right
-        if (x > w-r-1 && y > h-r-1) return CircleDist(x, y, w-r-1, h-r-1) <= r;
+        if (x < r && y < r) return CircleDist(x, y, r, r) <= r;
+        if (x > w - r - 1 && y < r) return CircleDist(x, y, w - r - 1, r) <= r;
+        if (x < r && y > h - r - 1) return CircleDist(x, y, r, h - r - 1) <= r;
+        if (x > w - r - 1 && y > h - r - 1) return CircleDist(x, y, w - r - 1, h - r - 1) <= r;
         return true;
     }
 

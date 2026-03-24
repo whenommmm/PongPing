@@ -6,26 +6,22 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    // Singleton so PingoMovement can call GameManager.Instance.AddScore()
     public static GameManager Instance { get; private set; }
 
-    [Header("References")]
-    public GameObject      ball;           // Drag the ball GameObject here
-    public GameObject      gameOverPanel;  // Drag the Game Over UI Panel here
-    public TextMeshProUGUI gameOverText;   // Drag the "Game Over" Text here
-    public TextMeshProUGUI scoreText;      // Drag the Score Text here
+    public GameObject ball;          
+    public GameObject gameOverPanel;  
+    public TextMeshProUGUI gameOverText;  
+    public TextMeshProUGUI scoreText;     
 
-    // Left/right screen boundaries in world units
     private float leftBoundary;
     private float rightBoundary;
     private float ballHalfSize;
 
     private bool isGameOver = false;
-    private int  score      = 0;
+    private int score = 0;
 
-    // PlayerPrefs keys (shared with MainMenuManager)
     private const string PrefDifficulty = "Difficulty";
-    private const string PrefHighScore  = "HighScore";
+    private const string PrefHighScore = "HighScore";
 
     void Awake()
     {
@@ -34,59 +30,59 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // figure out screen edges
         float halfWidth = Camera.main.orthographicSize * Camera.main.aspect;
-        ballHalfSize   = ball.GetComponent<SpriteRenderer>().bounds.extents.x;
+        ballHalfSize = ball.GetComponent<SpriteRenderer>().bounds.extents.x;
 
-        leftBoundary  = -halfWidth - ballHalfSize;
-        rightBoundary =  halfWidth + ballHalfSize;
+        leftBoundary = -halfWidth - ballHalfSize;
+        rightBoundary = halfWidth + ballHalfSize;
 
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
 
-        // Pin score text to top-centre so it never drifts on resize
+        // pin score to top right corner
         if (scoreText != null)
         {
             RectTransform rt = scoreText.GetComponent<RectTransform>();
-            rt.anchorMin        = new Vector2(1f, 1f);    
-            rt.anchorMax        = new Vector2(1f, 1f);
-            rt.pivot            = new Vector2(1f, 1f);
-            rt.anchoredPosition = new Vector2(-10f,-10f); // equal 10px margin from right and top
-            rt.sizeDelta        = new Vector2(200f, 60f);
-            scoreText.alignment = TMPro.TextAlignmentOptions.Right; // hug the right edge
+            rt.anchorMin = new Vector2(1f, 1f);    
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-10f, -10f); 
+            rt.sizeDelta = new Vector2(200f, 60f);
+            scoreText.alignment = TMPro.TextAlignmentOptions.Right;
         }
 
         UpdateScoreDisplay();
         ApplyDifficulty();
     }
 
-    /// <summary>Reads the saved difficulty and applies speed settings to the ball.</summary>
     private void ApplyDifficulty()
     {
-        int diff = PlayerPrefs.GetInt(PrefDifficulty, 1); // default Medium
+        // check what they chose in the menu
+        int diff = PlayerPrefs.GetInt(PrefDifficulty, 1);
         PingoMovement pingo = ball.GetComponent<PingoMovement>();
         if (pingo == null) return;
 
         switch (diff)
         {
-            case 0: // Easy
-                pingo.startSpeed    = 8f;
-                pingo.maxSpeed      = 10f;
-                pingo.rampDuration  = 30f;
+            case 0: 
+                pingo.startSpeed = 8f;
+                pingo.maxSpeed = 10f;
+                pingo.rampDuration = 30f;
                 break;
-            case 1: // Medium (defaults already set, but explicit for clarity)
-                pingo.startSpeed    = 9f;
-                pingo.maxSpeed      = 13f;
-                pingo.rampDuration  = 30f;
+            case 1: 
+                pingo.startSpeed = 9f;
+                pingo.maxSpeed = 13f;
+                pingo.rampDuration = 30f;
                 break;
-            case 2: // Hard
-                pingo.startSpeed    = 10f;
-                pingo.maxSpeed      = 16f;
-                pingo.rampDuration  = 25f;
+            case 2: 
+                pingo.startSpeed = 10f;
+                pingo.maxSpeed = 16f;
+                pingo.rampDuration = 25f;
                 break;
         }
     }
 
-    // Called by PingoMovement every time ball hits a paddle
     public void AddScore(int points)
     {
         if (isGameOver) return;
@@ -104,14 +100,14 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver)
         {
-            // Restart scene when spacebar is pressed
+            // restart if they hit space
             if (Keyboard.current.spaceKey.wasPressedThisFrame)
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 
-            return; // Don't check boundaries once game is over
+            return;
         }
 
-        // Check if ball has crossed left or right boundary
+        // see if ball slipped past us
         if (ball.transform.position.x <= leftBoundary ||
             ball.transform.position.x >= rightBoundary)
         {
@@ -123,18 +119,15 @@ public class GameManager : MonoBehaviour
     {
         isGameOver = true;
 
-       
         ball.GetComponent<PingoMovement>().enabled = false;
 
-        
         if (scoreText != null)
             scoreText.gameObject.SetActive(false);
 
-       
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
 
-        // Save high score
+        // check for new high score
         int prevBest = PlayerPrefs.GetInt(PrefHighScore, 0);
         if (score > prevBest)
         {
@@ -147,7 +140,5 @@ public class GameManager : MonoBehaviour
             int best = PlayerPrefs.GetInt(PrefHighScore, 0);
             gameOverText.text = "Game Over\nScore: " + score + "\nBest: " + best;
         }
-
-        Debug.Log("Game Over! Score: " + score);
     }
 }

@@ -1,26 +1,19 @@
 using UnityEngine;
 
-/// <summary>
-/// A simple persistent music player. Attach this to an empty GameObject in your Main Menu scene.
-/// It will keep playing continuously even when the game scene restarts or transitions.
-/// </summary>
 public class MusicPlayer : MonoBehaviour
 {
     private static MusicPlayer instance;
 
-    [Header("Audio Settings")]
     public AudioClip backgroundMusicClip;
-    [Range(0f, 1f)]
     public float volume = 0.3f;
 
     void Awake()
     {
-        // Singleton pattern to ensure music doesn't overlap when returning to the Main Menu
-        // or reloading the game scene.
+        // keep music playing between scenes
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject); // Keep alive across all scenes
+            DontDestroyOnLoad(gameObject); 
             
             AudioSource source = gameObject.AddComponent<AudioSource>();
             source.clip = backgroundMusicClip;
@@ -31,8 +24,7 @@ public class MusicPlayer : MonoBehaviour
         }
         else
         {
-            // If one already exists, destroy this duplicate
-            Destroy(gameObject);
+            Destroy(gameObject); // kill duplicate
         }
     }
 }
