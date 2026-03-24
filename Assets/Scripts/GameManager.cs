@@ -69,19 +69,19 @@ public class GameManager : MonoBehaviour
         switch (diff)
         {
             case 0: // Easy
-                pingo.startSpeed    = 4f;
-                pingo.maxSpeed      = 7f;
-                pingo.rampDuration  = 45f;
-                break;
-            case 1: // Medium (defaults already set, but explicit for clarity)
-                pingo.startSpeed    = 6f;
+                pingo.startSpeed    = 8f;
                 pingo.maxSpeed      = 10f;
                 pingo.rampDuration  = 30f;
                 break;
+            case 1: // Medium (defaults already set, but explicit for clarity)
+                pingo.startSpeed    = 9f;
+                pingo.maxSpeed      = 13f;
+                pingo.rampDuration  = 30f;
+                break;
             case 2: // Hard
-                pingo.startSpeed    = 8f;
-                pingo.maxSpeed      = 14f;
-                pingo.rampDuration  = 20f;
+                pingo.startSpeed    = 10f;
+                pingo.maxSpeed      = 16f;
+                pingo.rampDuration  = 25f;
                 break;
         }
     }

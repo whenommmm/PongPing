@@ -32,9 +32,13 @@ public class MainMenuManager : MonoBehaviour
     private static readonly Color BgColor      = new Color(0.153f, 0.188f, 0.235f); // #27303C
     private static readonly Color CardColor    = new Color(0.94f, 0.93f, 0.88f, 0.98f); // dull off-white cream
     private static readonly Color AccentColor  = new Color(0.153f, 0.188f, 0.235f); // #27303C (matches background)
+    
+    // Exact colors restored (no HDR multipliers)
     private static readonly Color PlayBtnColor = new Color(0.851f, 0.478f, 0.169f); // #D97A2B
     private static readonly Color ButtonColor  = new Color(0.7f, 0.7f, 0.75f); // warm grey for unselected buttons
-    private static readonly Color SelectedColor= new Color(0.9f, 0.15f, 0.15f); // red highlight
+    private static readonly Color EasyColor    = new Color(0.2f, 0.8f, 0.2f); // green
+    private static readonly Color MediumColor  = PlayBtnColor; // orange
+    private static readonly Color HardColor    = new Color(0.9f, 0.15f, 0.15f); // red
     private static readonly Color TextColor    = Color.black; // black text for buttons
     private static readonly Color SubTextColor = Color.black; // black text for score/controls
     private static readonly Color DividerColor = new Color(0f, 0f, 0f, 0.2f); // subtle dark dividers
@@ -182,9 +186,9 @@ public class MainMenuManager : MonoBehaviour
 
     private void RefreshDifficultyButtons()
     {
-        if (easyImg   != null) easyImg.color   = selectedDifficulty == 0 ? SelectedColor : ButtonColor;
-        if (mediumImg != null) mediumImg.color = selectedDifficulty == 1 ? SelectedColor : ButtonColor;
-        if (hardImg   != null) hardImg.color   = selectedDifficulty == 2 ? SelectedColor : ButtonColor;
+        if (easyImg   != null) easyImg.color   = selectedDifficulty == 0 ? EasyColor   : ButtonColor;
+        if (mediumImg != null) mediumImg.color = selectedDifficulty == 1 ? MediumColor : ButtonColor;
+        if (hardImg   != null) hardImg.color   = selectedDifficulty == 2 ? HardColor   : ButtonColor;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
