@@ -16,6 +16,10 @@ public class MainMenuManager : MonoBehaviour
     private int   selectedDifficulty = 1;
     private Image easyImg, mediumImg, hardImg;
 
+    [Header("Background")]
+    [Tooltip("Assign your background sprite here.")]
+    public Sprite backgroundSprite;
+
     [Header("Font")]
     [Tooltip("Assign your imported Press Start 2P (or any TMP font asset) here.")]
     public TMP_FontAsset arcadeFont; // leave empty to use TMP default
@@ -24,16 +28,16 @@ public class MainMenuManager : MonoBehaviour
     private Sprite _roundedSprite;
     private const int RoundRadius = 10; // pixels in the 128×128 source texture
 
-    // ── Palette — retro arcade / pong court ────────────────────────────────────
-    private static readonly Color BgColor      = new Color(0.23f, 0.37f, 0.52f); // #3B5F85
-    private static readonly Color CardColor    = new Color(0.15f, 0.26f, 0.39f, 0.92f); // dark card
-    private static readonly Color AccentColor  = new Color(0.90f, 0.93f, 0.96f); // off-white
-    private static readonly Color PlayBtnColor = new Color(0.12f, 0.23f, 0.37f); // deep navy
-    private static readonly Color ButtonColor  = new Color(0.19f, 0.31f, 0.45f); // muted blue
-    private static readonly Color SelectedColor= new Color(0.22f, 0.48f, 0.31f); // muted green
-    private static readonly Color TextColor    = new Color(0.90f, 0.93f, 0.96f); // off-white
-    private static readonly Color SubTextColor = new Color(0.54f, 0.64f, 0.75f); // blue-grey
-    private static readonly Color DividerColor = new Color(0.29f, 0.42f, 0.56f); // subtle
+    // ── Palette — Custom Warm/Dark Theme ───────────────────────────────────────
+    private static readonly Color BgColor      = new Color(0.153f, 0.188f, 0.235f); // #27303C
+    private static readonly Color CardColor    = new Color(0.94f, 0.93f, 0.88f, 0.98f); // dull off-white cream
+    private static readonly Color AccentColor  = new Color(0.0f, 0.90f, 1.0f); // keeping cyan for title
+    private static readonly Color PlayBtnColor = new Color(0.851f, 0.478f, 0.169f); // #D97A2B
+    private static readonly Color ButtonColor  = new Color(0.7f, 0.7f, 0.75f); // warm grey for unselected buttons
+    private static readonly Color SelectedColor= new Color(0.9f, 0.15f, 0.15f); // red highlight
+    private static readonly Color TextColor    = Color.black; // black text for buttons
+    private static readonly Color SubTextColor = Color.black; // black text for score/controls
+    private static readonly Color DividerColor = new Color(0f, 0f, 0f, 0.2f); // subtle dark dividers
 
     // ─────────────────────────────────────────────────────────────────────────
     void Awake() => BuildUI();
@@ -57,7 +61,11 @@ public class MainMenuManager : MonoBehaviour
         {
             GameObject go = new GameObject("Canvas");
             canvas = go.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            // Change to ScreenSpaceCamera so URP Post-Processing Bloom affects the UI!
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = Camera.main;
+            canvas.planeDistance = 5f;
+
             CanvasScaler cs   = go.AddComponent<CanvasScaler>();
             cs.uiScaleMode         = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             cs.referenceResolution = new Vector2(1920, 1080);
@@ -66,9 +74,13 @@ public class MainMenuManager : MonoBehaviour
 
         RectTransform root = canvas.GetComponent<RectTransform>();
 
-        // Full-screen background colour
-        MakeImage(root, "Background", BgColor, Vector2.zero, Vector2.one,
+        // Full-screen background colour or image
+        Image bgImg = MakeImage(root, "Background", backgroundSprite != null ? Color.white : BgColor, Vector2.zero, Vector2.one,
                   Vector2.zero, Vector2.zero);
+        if (backgroundSprite != null)
+        {
+            bgImg.sprite = backgroundSprite;
+        }
 
         // ── Dark card panel (gives the content depth) ─────────────────────────
         RectTransform card = MakePanel(canvas.transform, "Card",

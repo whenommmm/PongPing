@@ -10,6 +10,11 @@ public class PingoMovement : MonoBehaviour
     public float verticalSpeed  = 4f;    // Player-controlled vertical speed
     public float maxBounceAngle = 60f;   // Max angle on edge hit
 
+    [Header("Visual Effects")]
+    public TrailRenderer ballTrail;
+    public Color startTrailColor = Color.cyan;
+    public Color maxSpeedTrailColor = Color.red;
+
     // Derived each frame from ramp
     private float horizontalSpeed;
 
@@ -41,8 +46,21 @@ public class PingoMovement : MonoBehaviour
     void Update()
     {
         // ── Ramp horizontal speed from startSpeed to maxSpeed over rampDuration ─
-        float elapsed    = Mathf.Clamp(Time.time - gameStartTime, 0f, rampDuration);
-        horizontalSpeed  = Mathf.Lerp(startSpeed, maxSpeed, elapsed / rampDuration);
+        float elapsed = Mathf.Clamp(Time.time - gameStartTime, 0f, rampDuration);
+        float speedPercentage = elapsed / rampDuration;
+        horizontalSpeed = Mathf.Lerp(startSpeed, maxSpeed, speedPercentage);
+
+        // ── Update Trail Renderer ───────────────────────────────────────────
+        if (ballTrail != null)
+        {
+            // Shift color from start (cyan) to max speed (red)
+            Color currentColor = Color.Lerp(startTrailColor, maxSpeedTrailColor, speedPercentage);
+            ballTrail.startColor = currentColor;
+            ballTrail.endColor = new Color(currentColor.r, currentColor.g, currentColor.b, 0f); // fade out at tail
+
+            // Increase trail length as speed increases (time parameter determines length)
+            ballTrail.time = Mathf.Lerp(0.15f, 0.45f, speedPercentage);
+        }
 
         // ── Player always controls Y ────────────────────────────────────────
         var kb = Keyboard.current;
