@@ -31,7 +31,7 @@ public class MainMenuManager : MonoBehaviour
     // ── Palette — Custom Warm/Dark Theme ───────────────────────────────────────
     private static readonly Color BgColor      = new Color(0.153f, 0.188f, 0.235f); // #27303C
     private static readonly Color CardColor    = new Color(0.94f, 0.93f, 0.88f, 0.98f); // dull off-white cream
-    private static readonly Color AccentColor  = new Color(0.0f, 0.90f, 1.0f); // keeping cyan for title
+    private static readonly Color AccentColor  = new Color(0.153f, 0.188f, 0.235f); // #27303C (matches background)
     private static readonly Color PlayBtnColor = new Color(0.851f, 0.478f, 0.169f); // #D97A2B
     private static readonly Color ButtonColor  = new Color(0.7f, 0.7f, 0.75f); // warm grey for unselected buttons
     private static readonly Color SelectedColor= new Color(0.9f, 0.15f, 0.15f); // red highlight
